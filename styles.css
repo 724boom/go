@@ -1,0 +1,175 @@
+
+:root {
+  --text: rgba(0,0,0,.90);
+  --sub: rgba(0,0,0,.40);
+  --line: rgba(0,0,0,.08);
+  --danger: rgba(230,30,45,.90);
+  --bg: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; width: 100%; height: 100%; background: #fff; color: var(--text); }
+body { overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+button { border: 0; background: none; padding: 0; cursor: pointer; }
+#app { position: relative; width: 100vw; height: 100dvh; max-width: 520px; margin: 0 auto; background: #fff; overflow: hidden; }
+
+.screen { position: absolute; inset: 0; display: none; background: #fff; }
+.screen.active { display: block; }
+
+.homeGrid { height: 100%; display: grid; grid-template-rows: 10% 40% 40% 10%; }
+.weekday { display: grid; place-items: center; font-size: clamp(38px, 10vw, 52px); font-weight: 900; letter-spacing: .4px; }
+.chartArea { display: grid; place-items: center; padding: 18px 56px; }
+#pieCanvas { width: min(72vw, 310px); height: min(72vw, 310px); display: block; }
+.listArea { min-height: 0; padding: 0 22px; }
+.listCount { height: 30px; display: flex; justify-content: flex-end; align-items: center; color: var(--sub); font-size: 17px; }
+.taskList { height: calc(100% - 30px); overflow: auto; padding: 2px 0 6px; }
+.emptyState { height: 100%; display: grid; place-items: center; color: var(--sub); font-size: 13px; }
+
+.taskRow {
+  width: 100%;
+  min-height: 52px;
+  margin: 0 0 10px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  position: relative;
+  left: 0;
+  transform: none;
+}
+.taskRow.completed { background: rgba(0,0,0,.025); }
+.taskRow.completed .taskName { opacity: .42; }
+.taskRow.target { transform: scale(1.045); box-shadow: 0 10px 20px rgba(0,0,0,.22); z-index: 3; }
+.taskRow.dimmed { opacity: .38; }
+.taskDot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 14px; position: relative; }
+.taskRow.completed .taskDot::after {
+  content: "✓";
+  position: absolute;
+  inset: -1px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 900;
+  color: rgba(0,0,0,.65);
+}
+.taskName { flex: 1 1 auto; min-width: 0; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.indicator { width: 47px; display: grid; gap: 3px; flex: 0 0 47px; }
+.indicator.timer { width: max-content; flex: 0 0 auto; }
+.indRow { display: flex; gap: 3px; }
+.box { width: 7px; height: 7px; border-radius: 2px; border: .7px solid currentColor; }
+
+.bottomArea { position: relative; }
+.floatingButtons { position: absolute; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom)); display: flex; gap: 14px; align-items: center; }
+.roundButton { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); box-shadow: 0 4px 12px rgba(0,0,0,.08); font-size: 24px; font-weight: 900; }
+.roundButton.add { width: 62px; height: 62px; background: var(--text); color: #fff; font-size: 30px; }
+
+.editDim { position: absolute; inset: 0; background: rgba(0,0,0,.30); z-index: 10; display: none; }
+.editDim.deep { background: rgba(0,0,0,.48); }
+.editPanel { display: none; position: absolute; left: 22px; right: 22px; top: 50%; height: 40%; z-index: 11; border-radius: 26px; background: #fff; padding: 18px; box-shadow: 0 12px 28px rgba(0,0,0,.18); transform: scale(1.025); }
+.panelListWrap { height: calc(100% - 92px); }
+.editFooter { height: 92px; display: grid; gap: 10px; padding-top: 8px; }
+.caption { color: var(--sub); font-size: 13px; font-family: "HiraMaruProN-W4","Hiragino Maru Gothic ProN",sans-serif; }
+.editActions { display: flex; gap: 12px; }
+.editActions button, .wideButton { height: 46px; flex: 1; border-radius: 15px; background: rgba(0,0,0,.05); border: 1px solid var(--line); font-weight: 700; }
+.editActions button.active { background: var(--text); color: #fff; }
+.editActions button.dangerText { color: var(--danger); }
+.editActions button.dangerText.active { background: var(--danger); color: #fff; }
+
+#timerScreen { padding: 0; }
+.timerLayout {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 74px auto minmax(280px, 1fr) minmax(170px, .85fr);
+  padding: 18px 22px 44px;
+}
+.timerTop { display: flex; align-items: center; }
+.plainIcon { width: 48px; height: 48px; display: grid; place-items: center; font-size: 28px; font-weight: 900; }
+.timerTitleBlock { text-align: center; padding-top: 18px; }
+.timerName { font-size: 26px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.timerExec { display: flex; justify-content: center; margin: 8px 0 4px; }
+.timerCircleArea { display: grid; place-items: center; }
+.timerCircle { width: 280px; height: 280px; position: relative; }
+.timerCircle svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.timerText { position: absolute; inset: 0; display: grid; place-items: center; font-size: 48px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.timerButtonArea { display: grid; place-items: center; }
+.timerButtons { display: grid; justify-items: center; gap: 18px; }
+.playButton { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 28px; font-weight: 900; }
+.completeButton { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); background: #fff; font-size: 28px; font-weight: 900; }
+
+#formScreen { overflow: auto; }
+.formHeader { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; padding: 18px 18px 14px; background: #fff; text-align: center; }
+.formTitle { font-size: 20px; font-weight: 700; }
+.formBody { padding: 20px 22px 36px; display: grid; gap: 20px; }
+.card { padding: 16px; border: 1px solid var(--line); border-radius: 20px; background: #fff; }
+.cardTitle { display: block; margin-bottom: 12px; font-size: 16px; font-weight: 700; }
+.cardTitle.noMargin { margin: 0; }
+.textInput { width: 100%; border: 0; border-radius: 14px; background: rgba(0,0,0,.04); padding: 14px; outline: none; font-size: 17px; }
+.pickerCard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
+.pickerCard.two { grid-template-columns: 1fr 1fr; margin-top: 12px; }
+.pickerCard label, .singlePicker { font-size: 15px; font-weight: 700; }
+.pickerCard select, .singlePicker select { width: 100%; height: 132px; margin-top: 8px; border: 1px solid var(--line); border-radius: 16px; background: rgba(0,0,0,.035); font-size: 22px; font-weight: 800; text-align: center; }
+.colorGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px 12px; justify-items: center; }
+.colorButton { width: 38px; height: 38px; border-radius: 50%; }
+.colorButton.selected { outline: 3px solid var(--text); outline-offset: 2px; }
+.weekdayButtons { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+.dayButton { width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,.06); font-weight: 700; }
+.dayButton.selected { background: var(--text); color: #fff; }
+.rowBetween { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.switch { width: 52px; height: 32px; border-radius: 999px; background: rgba(0,0,0,.14); padding: 3px; display: flex; align-items: center; }
+.switch.on { justify-content: flex-end; }
+.switch span { width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.singlePicker { display: grid; margin-top: 14px; text-align: center; }
+.formEditActions { display: none; gap: 12px; }
+.formEditActions button { flex: 1; height: 52px; border-radius: 16px; background: rgba(0,0,0,.05); font-size: 22px; font-weight: 900; }
+.dangerFill { background: var(--danger) !important; color: #fff; }
+
+.confirmOverlay { position: absolute; inset: 0; z-index: 50; display: none; place-items: center; background: rgba(0,0,0,.34); }
+.confirmCard { width: min(calc(100% - 68px),380px); padding: 28px; border-radius: 28px; background: #fff; display: grid; gap: 24px; text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+.confirmText { font-size: 21px; font-weight: 900; }
+.confirmButtons { display: flex; justify-content: center; gap: 34px; }
+.confirmButtons button { width: 64px; height: 64px; font-size: 36px; font-weight: 900; }
+
+.completeOverlay { position: absolute; inset: 0; z-index: 60; display: none; place-items: center; background: rgba(255,255,255,.80); backdrop-filter: blur(2px); }
+.completeOverlay.show { display: grid; animation: fadeIn .18s ease-out both; }
+.completeContent { display: grid; justify-items: center; gap: 14px; }
+.completeCircle { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 42px; font-weight: 900; animation: pop .62s cubic-bezier(.2,1.2,.25,1) both; }
+.completeText { font-size: 28px; font-weight: 900; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { 0% { transform: scale(.55); opacity: 0; } 55% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+/* build 2026-05-29-R4: A編集ポップアップ右端長押し並び替え */
+.roundButton.editIcon svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+.reorderHandle {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  color: rgba(0,0,0,.42);
+  font-size: 24px;
+  font-weight: 900;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.taskRow.dragging {
+  transform: scale(1.045);
+  box-shadow: 0 10px 20px rgba(0,0,0,.22);
+  z-index: 4;
+}
+
+/* build 2026-05-29-R5: 並び替えは長押し選択→移動先タップ方式 */
+.taskRow.target {
+  transform: scale(1.045);
+  box-shadow: 0 10px 20px rgba(0,0,0,.22);
+  z-index: 4;
+}

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GO">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>GO</title>
+  <link rel="manifest" href="manifest.webmanifest?v=2026-05-29-GH1">
+  <link rel="apple-touch-icon" href="icons/icon-180.png?v=2026-05-29-GH1">
+  <link rel="stylesheet" href="styles.css?v=2026-05-29-GH1">
+  <!-- GO_REBUILD_VERSION 2026-05-29-GH1 -->
+</head>
+<body>
+  <main id="app">
+    <section id="homeScreen" class="screen active">
+      <div class="homeGrid">
+        <header class="weekday" id="weekdayText">MONDAY</header>
+        <section class="chartArea"><canvas id="pieCanvas" width="640" height="640" aria-label="今日の実行比率グラフ"></canvas></section>
+        <section class="listArea">
+          <div class="listCount" id="taskCount">0</div>
+          <div id="taskList" class="taskList"></div>
+        </section>
+        <footer class="bottomArea">
+          <div class="floatingButtons">
+            <button id="editButton" class="roundButton editIcon" aria-label="編集"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 19.8 5.5 15l9.9-9.9a2.2 2.2 0 0 1 3.1 0l.4.4a2.2 2.2 0 0 1 0 3.1L9 18.5l-4.8 1.3Z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><path d="m13.8 6.7 3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg></button>
+            <button id="addButton" class="roundButton add" aria-label="新規登録">＋</button>
+          </div>
+        </footer>
+      </div>
+      <div id="editDim" class="editDim"></div>
+      <div id="editPanel" class="editPanel">
+        <div class="panelListWrap">
+          <div class="listCount" id="editTaskCount">0</div>
+          <div id="editTaskList" class="taskList"></div>
+        </div>
+        <div class="editFooter">
+          <div id="editInstruction" class="caption"></div>
+          <div class="editActions">
+            <button id="duplicateModeButton">⧉ 複製</button>
+            <button id="deleteModeButton" class="dangerText">⌫ 削除</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="timerScreen" class="screen">
+      <div class="timerLayout">
+        <div class="timerTop">
+          <button id="timerStopButton" class="plainIcon" aria-label="中止">×</button>
+        </div>
+        <div class="timerTitleBlock">
+          <div id="timerName" class="timerName">タスク</div>
+          <div id="timerExecutionIndicator" class="timerExec"></div>
+          <div id="timerPhase" class="caption">実行時間</div>
+        </div>
+        <div class="timerCircleArea">
+          <div class="timerCircle">
+            <svg viewBox="0 0 280 280" aria-hidden="true">
+              <circle id="timerTrack" cx="140" cy="140" r="122" fill="none" stroke-width="18"></circle>
+              <circle id="timerProgress" cx="140" cy="140" r="122" fill="none" stroke-width="18" stroke-linecap="round"></circle>
+            </svg>
+            <div id="timerText" class="timerText">00:00</div>
+          </div>
+        </div>
+        <div class="timerButtonArea">
+          <div class="timerButtons">
+            <button id="playPauseButton" class="playButton" aria-label="再生">▶</button>
+            <button id="manualCompleteButton" class="completeButton" aria-label="完了">✓</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="formScreen" class="screen">
+      <div class="formHeader">
+        <button id="cancelButton" class="plainIcon" aria-label="キャンセル">×</button>
+        <div id="formTitle" class="formTitle">新規登録</div>
+        <button id="saveButton" class="plainIcon" aria-label="保存">☑</button>
+      </div>
+      <div class="formBody">
+        <div class="card">
+          <label class="cardTitle" for="taskNameInput">タスク名</label>
+          <input id="taskNameInput" class="textInput" placeholder="例：読書">
+        </div>
+        <div class="card pickerCard">
+          <label>実行時間<select id="workSelect" size="5"></select></label>
+          <label>延長時間<select id="extensionSelect" size="5"></select></label>
+          <label>実行回数<select id="countSelect" size="5"></select></label>
+        </div>
+        <div class="card">
+          <div class="cardTitle">色</div>
+          <div id="colorGrid" class="colorGrid"></div>
+        </div>
+        <div class="card">
+          <div class="cardTitle">繰り返し</div>
+          <button id="everydayButton" class="wideButton">○ 毎日</button>
+          <div id="weekdayButtons" class="weekdayButtons"></div>
+          <div class="caption">この時間以降を翌日として扱う</div>
+          <div class="pickerCard two">
+            <label>時<select id="boundaryHourSelect" size="5"></select></label>
+            <label>分<select id="boundaryMinuteSelect" size="5"></select></label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="rowBetween">
+            <div class="cardTitle noMargin">タイマー通知</div>
+            <button id="notificationToggle" class="switch" aria-label="タイマー通知"><span></span></button>
+          </div>
+          <div id="notificationText" class="caption">実行時間終了時・延長時間終了時に通知</div>
+          <label id="vibrationWrap" class="singlePicker">バイブ回数<select id="vibrationSelect" size="5"></select></label>
+        </div>
+        <div id="formEditActions" class="formEditActions">
+          <button id="duplicateFromFormButton">⧉</button>
+          <button id="deleteFromFormButton" class="dangerFill">⌫</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="confirmOverlay" class="confirmOverlay">
+      <div class="confirmCard">
+        <div id="confirmText" class="confirmText"></div>
+        <div class="confirmButtons">
+          <button id="confirmNo">×</button>
+          <button id="confirmYes">☑</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="completeOverlay" class="completeOverlay">
+      <div class="completeContent">
+        <div id="completeCircle" class="completeCircle">✓</div>
+        <div class="completeText">完了</div>
+      </div>
+    </div>
+  </main>
+  <script src="app.js?v=2026-05-29-GH1"></script>
+</body>
+</html>
