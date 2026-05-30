@@ -202,3 +202,78 @@ button { border: 0; background: none; padding: 0; cursor: pointer; }
 .panelListWrap {
   height: calc(100% - 82px) !important;
 }
+
+/* build 2026-05-29-R8: GO仕様の「項目名の真下・中央選択の数字スクロール」 */
+.numberWheelGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  text-align: center;
+}
+.numberWheelGrid.two {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 12px;
+}
+.numberWheelField {
+  min-width: 0;
+}
+.numberWheelTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.numberWheel {
+  position: relative;
+  height: 132px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.035);
+  overflow: hidden;
+}
+.numberWheelCenter {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 38px;
+  transform: translateY(-50%);
+  border-radius: 10px;
+  background: rgba(0,0,0,.06);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.10);
+  pointer-events: none;
+  z-index: 0;
+}
+.numberWheelScroller {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  padding: 47px 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.numberWheelScroller::-webkit-scrollbar {
+  display: none;
+}
+.numberWheelItem {
+  width: 100%;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  scroll-snap-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: rgba(0,0,0,.34);
+}
+.numberWheelItem.active {
+  color: var(--text);
+  transform: scale(1.08);
+}
+.singlePicker {
+  display: grid;
+  margin-top: 14px;
+  text-align: center;
+}

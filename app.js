@@ -1,5 +1,5 @@
 
-window.GO_BUILD_VERSION = "2026-05-29-R7";
+window.GO_BUILD_VERSION = "2026-05-29-R8";
 (function(){
   "use strict";
 
@@ -321,26 +321,91 @@ window.GO_BUILD_VERSION = "2026-05-29-R7";
     renderForm();
     showScreen("formScreen");
   }
-  function setOptions(id,a,b,v){
-    var s = el(id);
-    if(!s.dataset.ready || s.dataset.a !== String(a) || s.dataset.b !== String(b)){
-      s.innerHTML = "";
-      for(var i=a;i<=b;i++){ var o=document.createElement("option"); o.value=i; o.textContent=i; s.appendChild(o); }
-      s.dataset.ready = "1"; s.dataset.a = String(a); s.dataset.b = String(b);
+  function setNumberWheel(id,a,b,v,onChange){
+    var root = el(id);
+    if(!root) return;
+    var value = clamp(v,a,b);
+    var key = String(a) + ":" + String(b);
+
+    if(root.dataset.range !== key){
+      root.innerHTML = '<div class="numberWheelCenter"></div><div class="numberWheelScroller"></div>';
+      var scroller = root.querySelector(".numberWheelScroller");
+      for(var i=a;i<=b;i++){
+        var item = document.createElement("button");
+        item.type = "button";
+        item.className = "numberWheelItem";
+        item.dataset.value = String(i);
+        item.textContent = String(i);
+        item.setAttribute("role","option");
+        item.onclick = function(){
+          var next = Number(this.dataset.value);
+          selectNumberWheel(root,next,true);
+          if(onChange) onChange(next);
+        };
+        scroller.appendChild(item);
+      }
+      var scrollTimer = null;
+      scroller.onscroll = function(){
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(function(){
+          var next = centeredWheelValue(root);
+          selectNumberWheel(root,next,false);
+          if(onChange) onChange(next);
+        },90);
+      };
+      root.dataset.range = key;
     }
-    s.value = String(v);
+
+    selectNumberWheel(root,value,false);
+  }
+
+  function centeredWheelValue(root){
+    var scroller = root.querySelector(".numberWheelScroller");
+    var items = Array.prototype.slice.call(root.querySelectorAll(".numberWheelItem"));
+    if(!scroller || !items.length) return Number(root.dataset.value || 0);
+    var center = scroller.getBoundingClientRect().top + scroller.clientHeight / 2;
+    var best = items[0], bestDistance = Infinity;
+    items.forEach(function(item){
+      var rect = item.getBoundingClientRect();
+      var itemCenter = rect.top + rect.height / 2;
+      var distance = Math.abs(itemCenter - center);
+      if(distance < bestDistance){ bestDistance = distance; best = item; }
+    });
+    return Number(best.dataset.value);
+  }
+
+  function selectNumberWheel(root,value,animated){
+    var scroller = root.querySelector(".numberWheelScroller");
+    var items = Array.prototype.slice.call(root.querySelectorAll(".numberWheelItem"));
+    root.dataset.value = String(value);
+    items.forEach(function(item){
+      var active = Number(item.dataset.value) === Number(value);
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-selected", active ? "true" : "false");
+      if(active && scroller){
+        var target = item.offsetTop - (scroller.clientHeight - item.offsetHeight) / 2;
+        scroller.scrollTo({top: target, behavior: animated ? "smooth" : "auto"});
+      }
+    });
   }
   function renderForm(){
     var f = S.form;
     el("formTitle").textContent = S.formMode === "new" ? "新規登録" : "編集";
     el("formEditActions").style.display = S.formMode === "edit" ? "flex" : "none";
     el("taskNameInput").value = f.name;
-    setOptions("workSelect",1,60,f.workMinutes);
-    setOptions("extensionSelect",0,50,f.extensionMinutes);
-    setOptions("countSelect",1,10,f.executionCount);
-    setOptions("boundaryHourSelect",0,23,f.dayBoundaryHour);
-    setOptions("boundaryMinuteSelect",0,59,f.dayBoundaryMinute);
-    setOptions("vibrationSelect",1,5,f.vibrationCount);
+    var maxExtensionMinutes = Math.max(0, 60 - clamp(f.workMinutes,1,60));
+    f.extensionMinutes = clamp(f.extensionMinutes,0,maxExtensionMinutes);
+
+    setNumberWheel("workWheel",1,60,f.workMinutes,function(value){
+      S.form.workMinutes = value;
+      S.form.extensionMinutes = clamp(S.form.extensionMinutes,0,Math.max(0,60-value));
+      renderForm();
+    });
+    setNumberWheel("extensionWheel",0,maxExtensionMinutes,f.extensionMinutes,function(value){ S.form.extensionMinutes = value; });
+    setNumberWheel("countWheel",1,10,f.executionCount,function(value){ S.form.executionCount = value; });
+    setNumberWheel("boundaryHourWheel",0,23,f.dayBoundaryHour,function(value){ S.form.dayBoundaryHour = value; });
+    setNumberWheel("boundaryMinuteWheel",0,59,f.dayBoundaryMinute,function(value){ S.form.dayBoundaryMinute = value; });
+    setNumberWheel("vibrationWheel",1,5,f.vibrationCount,function(value){ S.form.vibrationCount = value; });
 
     var grid = el("colorGrid"); grid.innerHTML = "";
     COLORS.forEach(function(c,i){
@@ -374,12 +439,12 @@ window.GO_BUILD_VERSION = "2026-05-29-R7";
   function readForm(){
     var f = S.form;
     f.name = el("taskNameInput").value.trim();
-    f.workMinutes = clamp(el("workSelect").value,1,60);
-    f.extensionMinutes = clamp(el("extensionSelect").value,0,50);
-    f.executionCount = clamp(el("countSelect").value,1,10);
-    f.dayBoundaryHour = clamp(el("boundaryHourSelect").value,0,23);
-    f.dayBoundaryMinute = clamp(el("boundaryMinuteSelect").value,0,59);
-    f.vibrationCount = clamp(el("vibrationSelect").value,1,5);
+    f.workMinutes = clamp(f.workMinutes,1,60);
+    f.extensionMinutes = clamp(f.extensionMinutes,0,Math.max(0,60-f.workMinutes));
+    f.executionCount = clamp(f.executionCount,1,10);
+    f.dayBoundaryHour = clamp(f.dayBoundaryHour,0,23);
+    f.dayBoundaryMinute = clamp(f.dayBoundaryMinute,0,59);
+    f.vibrationCount = clamp(f.vibrationCount,1,5);
     if(!f.repeatWeekdays.length) f.repeatWeekdays = [1,2,3,4,5,6,7];
     return normalizeTask(f);
   }
@@ -559,17 +624,6 @@ window.GO_BUILD_VERSION = "2026-05-29-R7";
     el("confirmYes").onclick = function(){ var fn = S.confirmYes; closeConfirm(false); if(fn) fn(); };
     el("confirmOverlay").onclick = function(e){ if(e.target.id === "confirmOverlay") closeConfirm(true); };
 
-    ["workSelect","extensionSelect","countSelect","boundaryHourSelect","boundaryMinuteSelect","vibrationSelect"].forEach(function(id){
-      el(id).onchange = function(){
-        if(!S.form) return;
-        S.form.workMinutes = clamp(el("workSelect").value,1,60);
-        S.form.extensionMinutes = clamp(el("extensionSelect").value,0,50);
-        S.form.executionCount = clamp(el("countSelect").value,1,10);
-        S.form.dayBoundaryHour = clamp(el("boundaryHourSelect").value,0,23);
-        S.form.dayBoundaryMinute = clamp(el("boundaryMinuteSelect").value,0,59);
-        S.form.vibrationCount = clamp(el("vibrationSelect").value,1,5);
-      };
-    });
     el("taskNameInput").oninput = function(){ if(S.form) S.form.name = el("taskNameInput").value; };
   }
 
