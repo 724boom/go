@@ -1,5 +1,5 @@
 
-window.GO_BUILD_VERSION = "2026-05-29-R8";
+window.GO_BUILD_VERSION = "2026-05-30-R9";
 (function(){
   "use strict";
 
@@ -48,7 +48,7 @@ window.GO_BUILD_VERSION = "2026-05-29-R8";
       id: t.id || uid(),
       name: t.name || "タスク",
       workMinutes: clamp(t.workMinutes == null ? 25 : t.workMinutes, 1, 60),
-      extensionMinutes: clamp(t.extensionMinutes == null ? 5 : t.extensionMinutes, 0, 50),
+      extensionMinutes: clamp(t.extensionMinutes == null ? 5 : t.extensionMinutes, 0, Math.max(0, 60 - clamp(t.workMinutes == null ? 25 : t.workMinutes, 1, 60))),
       executionCount: clamp(t.executionCount == null ? 1 : t.executionCount, 1, 10),
       colorIndex: clamp(t.colorIndex == null ? 0 : t.colorIndex, 0, COLORS.length - 1),
       repeatWeekdays: Array.isArray(t.repeatWeekdays) && t.repeatWeekdays.length ? t.repeatWeekdays : [1,2,3,4,5,6,7],
@@ -318,8 +318,12 @@ window.GO_BUILD_VERSION = "2026-05-29-R8";
     var task = id ? S.tasks.find(function(t){ return t.id === id; }) : null;
     S.form = task ? JSON.parse(JSON.stringify(task)) : normalizeTask({name:""});
     S.editing = false; S.editAction = null; S.selectedTaskId = null;
-    renderForm();
     showScreen("formScreen");
+    renderForm();
+    requestAnimationFrame(function(){
+      alignAllNumberWheels();
+      requestAnimationFrame(alignAllNumberWheels);
+    });
   }
   function setNumberWheel(id,a,b,v,onChange){
     var root = el(id);
@@ -357,6 +361,7 @@ window.GO_BUILD_VERSION = "2026-05-29-R8";
     }
 
     selectNumberWheel(root,value,false);
+    requestAnimationFrame(function(){ selectNumberWheel(root,value,false); });
   }
 
   function centeredWheelValue(root){
@@ -384,9 +389,27 @@ window.GO_BUILD_VERSION = "2026-05-29-R8";
       item.setAttribute("aria-selected", active ? "true" : "false");
       if(active && scroller){
         var target = item.offsetTop - (scroller.clientHeight - item.offsetHeight) / 2;
-        scroller.scrollTo({top: target, behavior: animated ? "smooth" : "auto"});
+        if(Number.isFinite(target)){
+          try{
+            scroller.scrollTo({top: target, behavior: animated ? "smooth" : "auto"});
+          }catch(e){
+            scroller.scrollTop = target;
+          }
+        }
       }
     });
+  }
+
+  function alignNumberWheel(id){
+    var root = el(id);
+    if(!root) return;
+    var value = Number(root.dataset.value);
+    if(!Number.isFinite(value)) return;
+    selectNumberWheel(root, value, false);
+  }
+
+  function alignAllNumberWheels(){
+    ["workWheel","extensionWheel","countWheel","boundaryHourWheel","boundaryMinuteWheel","vibrationWheel"].forEach(alignNumberWheel);
   }
   function renderForm(){
     var f = S.form;
