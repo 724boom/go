@@ -1,5 +1,5 @@
 
-window.GO_BUILD_VERSION = "2026-05-29-GH1";
+window.GO_BUILD_VERSION = "2026-05-29-R7";
 (function(){
   "use strict";
 
@@ -149,23 +149,25 @@ window.GO_BUILD_VERSION = "2026-05-29-GH1";
     showScreen("homeScreen");
     var now = new Date();
     el("weekdayText").textContent = now.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase();
-    var list = orderedToday();
-    el("taskCount").textContent = list.length;
-    el("editTaskCount").textContent = list.length;
-    renderTaskList(el("taskList"), list, false);
-    renderTaskList(el("editTaskList"), list, true);
-    renderPie(list);
+    var homeList = orderedToday();
+    var editList = tasksToday();
+    el("taskCount").textContent = homeList.length;
+    el("editTaskCount").textContent = editList.length;
+    renderTaskList(el("taskList"), homeList, false);
+    renderTaskList(el("editTaskList"), editList, true);
+    renderPie(homeList);
     renderEditMode();
   }
   function updateHomeClockAndChartOnly(){
     var now = new Date();
     el("weekdayText").textContent = now.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase();
-    var list = orderedToday();
-    el("taskCount").textContent = list.length;
-    el("editTaskCount").textContent = list.length;
-    renderTaskList(el("taskList"), list, false);
-    renderTaskList(el("editTaskList"), list, true);
-    renderPie(list);
+    var homeList = orderedToday();
+    var editList = tasksToday();
+    el("taskCount").textContent = homeList.length;
+    el("editTaskCount").textContent = editList.length;
+    renderTaskList(el("taskList"), homeList, false);
+    renderTaskList(el("editTaskList"), editList, true);
+    renderPie(homeList);
     renderEditMode();
   }
 
@@ -179,7 +181,7 @@ window.GO_BUILD_VERSION = "2026-05-29-GH1";
     list.forEach(function(task){
       var b = document.createElement("button");
       b.className = "taskRow";
-      if(isCompleted(task)) b.classList.add("completed");
+      if(!edit && isCompleted(task)) b.classList.add("completed");
       if(S.editAction && S.selectedTaskId === task.id) b.classList.add("target");
       if(S.editAction && S.selectedTaskId && S.selectedTaskId !== task.id) b.classList.add("dimmed");
       if(edit && S.reorderTaskId === task.id) b.classList.add("target");
@@ -279,7 +281,6 @@ window.GO_BUILD_VERSION = "2026-05-29-GH1";
     var to = S.tasks.findIndex(function(t){ return t.id === targetId; });
     if(from < 0 || to < 0) return;
     var item = S.tasks.splice(from, 1)[0];
-    if(from < to) to -= 1;
     S.tasks.splice(to, 0, item);
     saveTasks();
   }
