@@ -363,30 +363,3 @@ button { border: 0; background: none; padding: 0; cursor: pointer; }
   .numberStepperGrid { grid-template-columns: 1fr; }
   .numberStepperGrid.two { grid-template-columns: 1fr 1fr; }
 }
-
-/* build 2026-05-30-R11: ホーム曜日表示をグラフ上余白部の縦横中央へ移動 */
-.homeGrid {
-  grid-template-rows: 0% 50% 40% 10% !important;
-}
-.weekday {
-  position: absolute !important;
-  top: calc(env(safe-area-inset-top) + 76px) !important;
-  left: 22px !important;
-  right: 22px !important;
-  height: 58px !important;
-  z-index: 2 !important;
-  display: grid !important;
-  place-items: center !important;
-  pointer-events: none !important;
-  font-size: clamp(30px, 8.5vw, 44px) !important;
-  font-weight: 900 !important;
-  letter-spacing: .4px !important;
-}
-.chartArea {
-  padding-top: calc(62px + env(safe-area-inset-top)) !important;
-  padding-bottom: 12px !important;
-}
-#pieCanvas {
-  width: min(68vw, 292px) !important;
-  height: min(68vw, 292px) !important;
-}
