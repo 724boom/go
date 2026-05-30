@@ -297,3 +297,69 @@ button { border: 0; background: none; padding: 0; cursor: pointer; }
   font-size: 24px !important;
   font-weight: 900 !important;
 }
+
+
+/* R10 stepper UI */
+.numberStepperGrid {
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  text-align:center;
+}
+.numberStepperGrid.two {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 12px;
+}
+.numberStepperField { min-width:0; }
+.numberStepperTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.numberStepper {
+  display:grid;
+  grid-template-columns: 52px 1fr 52px;
+  align-items:center;
+  gap: 8px;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(0,0,0,.035);
+  padding: 10px;
+}
+.stepperButton {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: #fff;
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.stepperButton.disabled, .stepperButton:disabled {
+  opacity: .32;
+  box-shadow: none;
+  background: rgba(0,0,0,.04);
+  color: rgba(0,0,0,.35);
+}
+.stepperValue {
+  text-align:center;
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.singlePicker {
+  display:grid;
+  margin-top: 14px;
+  text-align:center;
+}
+@media (max-width: 520px) {
+  .numberStepperGrid { grid-template-columns: 1fr; }
+  .numberStepperGrid.two { grid-template-columns: 1fr 1fr; }
+}

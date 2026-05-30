@@ -8,10 +8,10 @@
   <meta name="apple-mobile-web-app-title" content="GO">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>GO</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2026-05-30-R9">
-  <link rel="apple-touch-icon" href="icons/icon-180.png?v=2026-05-30-R9">
-  <link rel="stylesheet" href="styles.css?v=2026-05-30-R9">
-  <!-- GO_REBUILD_VERSION 2026-05-30-R9 -->
+  <link rel="manifest" href="manifest.webmanifest?v=2026-05-30-R10">
+  <link rel="apple-touch-icon" href="icons/icon-180.png?v=2026-05-30-R10">
+  <link rel="stylesheet" href="styles.css?v=2026-05-30-R10">
+  <!-- GO_REBUILD_VERSION 2026-05-30-R10 -->
 </head>
 <body>
   <main id="app">
@@ -85,18 +85,18 @@
           <label class="cardTitle" for="taskNameInput">タスク名</label>
           <input id="taskNameInput" class="textInput" placeholder="例：読書">
         </div>
-        <div class="card numberWheelGrid">
-          <div class="numberWheelField">
-            <div class="numberWheelTitle">実行時間</div>
-            <div id="workWheel" class="numberWheel" role="listbox" aria-label="実行時間"></div>
+        <div class="card numberStepperGrid">
+          <div class="numberStepperField">
+            <div class="numberStepperTitle">実行時間</div>
+            <div id="workStepper" class="numberStepper"></div>
           </div>
-          <div class="numberWheelField">
-            <div class="numberWheelTitle">延長時間</div>
-            <div id="extensionWheel" class="numberWheel" role="listbox" aria-label="延長時間"></div>
+          <div class="numberStepperField">
+            <div class="numberStepperTitle">延長時間</div>
+            <div id="extensionStepper" class="numberStepper"></div>
           </div>
-          <div class="numberWheelField">
-            <div class="numberWheelTitle">実行回数</div>
-            <div id="countWheel" class="numberWheel" role="listbox" aria-label="実行回数"></div>
+          <div class="numberStepperField">
+            <div class="numberStepperTitle">実行回数</div>
+            <div id="countStepper" class="numberStepper"></div>
           </div>
         </div>
         <div class="card">
@@ -108,14 +108,14 @@
           <button id="everydayButton" class="wideButton">○ 毎日</button>
           <div id="weekdayButtons" class="weekdayButtons"></div>
           <div class="caption">この時間以降を翌日として扱う</div>
-          <div class="numberWheelGrid two">
-            <div class="numberWheelField">
-              <div class="numberWheelTitle">時</div>
-              <div id="boundaryHourWheel" class="numberWheel" role="listbox" aria-label="時"></div>
+          <div class="numberStepperGrid two">
+            <div class="numberStepperField">
+              <div class="numberStepperTitle">時</div>
+              <div id="boundaryHourStepper" class="numberStepper"></div>
             </div>
-            <div class="numberWheelField">
-              <div class="numberWheelTitle">分</div>
-              <div id="boundaryMinuteWheel" class="numberWheel" role="listbox" aria-label="分"></div>
+            <div class="numberStepperField">
+              <div class="numberStepperTitle">分</div>
+              <div id="boundaryMinuteStepper" class="numberStepper"></div>
             </div>
           </div>
         </div>
@@ -126,9 +126,9 @@
           </div>
           <div id="notificationText" class="caption">実行時間終了時・延長時間終了時に通知</div>
           <div id="vibrationWrap" class="singlePicker">
-            <div class="numberWheelField">
-              <div class="numberWheelTitle">バイブ回数</div>
-              <div id="vibrationWheel" class="numberWheel" role="listbox" aria-label="バイブ回数"></div>
+            <div class="numberStepperField">
+              <div class="numberStepperTitle">バイブ回数</div>
+              <div id="vibrationStepper" class="numberStepper"></div>
             </div>
           </div>
         </div>
@@ -156,6 +156,6 @@
       </div>
     </div>
   </main>
-  <script src="app.js?v=2026-05-30-R9"></script>
+  <script src="app.js?v=2026-05-30-R10"></script>
 </body>
 </html>

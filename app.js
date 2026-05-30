@@ -1,5 +1,5 @@
 
-window.GO_BUILD_VERSION = "2026-05-30-R9";
+window.GO_BUILD_VERSION = "2026-05-30-R10";
 (function(){
   "use strict";
 
@@ -47,8 +47,8 @@ window.GO_BUILD_VERSION = "2026-05-30-R9";
     return {
       id: t.id || uid(),
       name: t.name || "タスク",
-      workMinutes: clamp(t.workMinutes == null ? 25 : t.workMinutes, 1, 60),
-      extensionMinutes: clamp(t.extensionMinutes == null ? 5 : t.extensionMinutes, 0, Math.max(0, 60 - clamp(t.workMinutes == null ? 25 : t.workMinutes, 1, 60))),
+      workMinutes: snapToStep(t.workMinutes == null ? 25 : t.workMinutes, 5, 60, 5),
+      extensionMinutes: snapToStep(t.extensionMinutes == null ? 5 : t.extensionMinutes, 0, Math.max(0, 60 - snapToStep(t.workMinutes == null ? 25 : t.workMinutes, 5, 60, 5)), 5),
       executionCount: clamp(t.executionCount == null ? 1 : t.executionCount, 1, 10),
       colorIndex: clamp(t.colorIndex == null ? 0 : t.colorIndex, 0, COLORS.length - 1),
       repeatWeekdays: Array.isArray(t.repeatWeekdays) && t.repeatWeekdays.length ? t.repeatWeekdays : [1,2,3,4,5,6,7],
@@ -320,115 +320,83 @@ window.GO_BUILD_VERSION = "2026-05-30-R9";
     S.editing = false; S.editAction = null; S.selectedTaskId = null;
     showScreen("formScreen");
     renderForm();
-    requestAnimationFrame(function(){
-      alignAllNumberWheels();
-      requestAnimationFrame(alignAllNumberWheels);
-    });
   }
-  function setNumberWheel(id,a,b,v,onChange){
+  function snapToStep(value, minValue, maxValue, step) {
+    var safeStep = Math.max(1, Number(step) || 1);
+    var safeMin = Number(minValue) || 0;
+    var safeMax = Number(maxValue);
+    if(!Number.isFinite(safeMax)) safeMax = safeMin;
+    var clamped = clamp(value, safeMin, safeMax);
+    var snapped = safeMin + Math.round((clamped - safeMin) / safeStep) * safeStep;
+    return clamp(snapped, safeMin, safeMax);
+  }
+
+  function setNumberStepper(id, minValue, maxValue, value, step, onChange){
     var root = el(id);
     if(!root) return;
-    var value = clamp(v,a,b);
-    var key = String(a) + ":" + String(b);
+    var safeMin = Number(minValue) || 0;
+    var safeMax = Number(maxValue);
+    if(!Number.isFinite(safeMax)) safeMax = safeMin;
+    var safeStep = Math.max(1, Number(step) || 1);
+    var current = snapToStep(value, safeMin, safeMax, safeStep);
 
-    if(root.dataset.range !== key){
-      root.innerHTML = '<div class="numberWheelCenter"></div><div class="numberWheelScroller"></div>';
-      var scroller = root.querySelector(".numberWheelScroller");
-      for(var i=a;i<=b;i++){
-        var item = document.createElement("button");
-        item.type = "button";
-        item.className = "numberWheelItem";
-        item.dataset.value = String(i);
-        item.textContent = String(i);
-        item.setAttribute("role","option");
-        item.onclick = function(){
-          var next = Number(this.dataset.value);
-          selectNumberWheel(root,next,true);
-          if(onChange) onChange(next);
-        };
-        scroller.appendChild(item);
-      }
-      var scrollTimer = null;
-      scroller.onscroll = function(){
-        clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(function(){
-          var next = centeredWheelValue(root);
-          selectNumberWheel(root,next,false);
-          if(onChange) onChange(next);
-        },90);
-      };
-      root.dataset.range = key;
+    if(!root.dataset.ready){
+      root.innerHTML = '' +
+        '<button type="button" class="stepperButton minus" aria-label="減らす">−</button>' +
+        '<div class="stepperValue" aria-live="polite"></div>' +
+        '<button type="button" class="stepperButton plus" aria-label="増やす">＋</button>' ;
+      root.dataset.ready = '1';
     }
 
-    selectNumberWheel(root,value,false);
-    requestAnimationFrame(function(){ selectNumberWheel(root,value,false); });
+    var minus = root.querySelector('.minus');
+    var plus = root.querySelector('.plus');
+    var valueNode = root.querySelector('.stepperValue');
+
+    valueNode.textContent = String(current);
+    root.dataset.value = String(current);
+
+    var atMin = current <= safeMin;
+    var atMax = current >= safeMax;
+    minus.disabled = atMin;
+    plus.disabled = atMax;
+    minus.classList.toggle('disabled', atMin);
+    plus.classList.toggle('disabled', atMax);
+
+    minus.onclick = function(){
+      if(current <= safeMin) return;
+      var next = snapToStep(current - safeStep, safeMin, safeMax, safeStep);
+      if(onChange) onChange(next);
+    };
+    plus.onclick = function(){
+      if(current >= safeMax) return;
+      var next = snapToStep(current + safeStep, safeMin, safeMax, safeStep);
+      if(onChange) onChange(next);
+    };
   }
 
-  function centeredWheelValue(root){
-    var scroller = root.querySelector(".numberWheelScroller");
-    var items = Array.prototype.slice.call(root.querySelectorAll(".numberWheelItem"));
-    if(!scroller || !items.length) return Number(root.dataset.value || 0);
-    var center = scroller.getBoundingClientRect().top + scroller.clientHeight / 2;
-    var best = items[0], bestDistance = Infinity;
-    items.forEach(function(item){
-      var rect = item.getBoundingClientRect();
-      var itemCenter = rect.top + rect.height / 2;
-      var distance = Math.abs(itemCenter - center);
-      if(distance < bestDistance){ bestDistance = distance; best = item; }
-    });
-    return Number(best.dataset.value);
-  }
-
-  function selectNumberWheel(root,value,animated){
-    var scroller = root.querySelector(".numberWheelScroller");
-    var items = Array.prototype.slice.call(root.querySelectorAll(".numberWheelItem"));
-    root.dataset.value = String(value);
-    items.forEach(function(item){
-      var active = Number(item.dataset.value) === Number(value);
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-selected", active ? "true" : "false");
-      if(active && scroller){
-        var target = item.offsetTop - (scroller.clientHeight - item.offsetHeight) / 2;
-        if(Number.isFinite(target)){
-          try{
-            scroller.scrollTo({top: target, behavior: animated ? "smooth" : "auto"});
-          }catch(e){
-            scroller.scrollTop = target;
-          }
-        }
-      }
-    });
-  }
-
-  function alignNumberWheel(id){
-    var root = el(id);
-    if(!root) return;
-    var value = Number(root.dataset.value);
-    if(!Number.isFinite(value)) return;
-    selectNumberWheel(root, value, false);
-  }
-
-  function alignAllNumberWheels(){
-    ["workWheel","extensionWheel","countWheel","boundaryHourWheel","boundaryMinuteWheel","vibrationWheel"].forEach(alignNumberWheel);
-  }
   function renderForm(){
     var f = S.form;
     el("formTitle").textContent = S.formMode === "new" ? "新規登録" : "編集";
     el("formEditActions").style.display = S.formMode === "edit" ? "flex" : "none";
     el("taskNameInput").value = f.name;
-    var maxExtensionMinutes = Math.max(0, 60 - clamp(f.workMinutes,1,60));
-    f.extensionMinutes = clamp(f.extensionMinutes,0,maxExtensionMinutes);
+    f.workMinutes = snapToStep(f.workMinutes, 5, 60, 5);
+    var maxExtensionMinutes = Math.max(0, 60 - clamp(f.workMinutes,5,60));
+    f.extensionMinutes = snapToStep(f.extensionMinutes,0,maxExtensionMinutes,5);
+    f.executionCount = clamp(f.executionCount,1,10);
+    f.dayBoundaryHour = clamp(f.dayBoundaryHour,0,23);
+    f.dayBoundaryMinute = snapToStep(f.dayBoundaryMinute,0,55,5);
+    f.vibrationCount = clamp(f.vibrationCount,1,5);
 
-    setNumberWheel("workWheel",1,60,f.workMinutes,function(value){
+    setNumberStepper("workStepper",5,60,f.workMinutes,5,function(value){
       S.form.workMinutes = value;
-      S.form.extensionMinutes = clamp(S.form.extensionMinutes,0,Math.max(0,60-value));
+      S.form.extensionMinutes = snapToStep(S.form.extensionMinutes,0,Math.max(0,60-value),5);
       renderForm();
     });
-    setNumberWheel("extensionWheel",0,maxExtensionMinutes,f.extensionMinutes,function(value){ S.form.extensionMinutes = value; });
-    setNumberWheel("countWheel",1,10,f.executionCount,function(value){ S.form.executionCount = value; });
-    setNumberWheel("boundaryHourWheel",0,23,f.dayBoundaryHour,function(value){ S.form.dayBoundaryHour = value; });
-    setNumberWheel("boundaryMinuteWheel",0,59,f.dayBoundaryMinute,function(value){ S.form.dayBoundaryMinute = value; });
-    setNumberWheel("vibrationWheel",1,5,f.vibrationCount,function(value){ S.form.vibrationCount = value; });
+    setNumberStepper("extensionStepper",0,maxExtensionMinutes,f.extensionMinutes,5,function(value){ S.form.extensionMinutes = value; renderForm(); });
+    setNumberStepper("countStepper",1,10,f.executionCount,1,function(value){ S.form.executionCount = value; renderForm(); });
+    setNumberStepper("boundaryHourStepper",0,23,f.dayBoundaryHour,1,function(value){ S.form.dayBoundaryHour = value; renderForm(); });
+    setNumberStepper("boundaryMinuteStepper",0,55,f.dayBoundaryMinute,5,function(value){ S.form.dayBoundaryMinute = value; renderForm(); });
+    setNumberStepper("vibrationStepper",1,5,f.vibrationCount,1,function(value){ S.form.vibrationCount = value; renderForm(); });
 
     var grid = el("colorGrid"); grid.innerHTML = "";
     COLORS.forEach(function(c,i){
@@ -462,11 +430,11 @@ window.GO_BUILD_VERSION = "2026-05-30-R9";
   function readForm(){
     var f = S.form;
     f.name = el("taskNameInput").value.trim();
-    f.workMinutes = clamp(f.workMinutes,1,60);
-    f.extensionMinutes = clamp(f.extensionMinutes,0,Math.max(0,60-f.workMinutes));
+    f.workMinutes = snapToStep(f.workMinutes,5,60,5);
+    f.extensionMinutes = snapToStep(f.extensionMinutes,0,Math.max(0,60-f.workMinutes),5);
     f.executionCount = clamp(f.executionCount,1,10);
     f.dayBoundaryHour = clamp(f.dayBoundaryHour,0,23);
-    f.dayBoundaryMinute = clamp(f.dayBoundaryMinute,0,59);
+    f.dayBoundaryMinute = snapToStep(f.dayBoundaryMinute,0,55,5);
     f.vibrationCount = clamp(f.vibrationCount,1,5);
     if(!f.repeatWeekdays.length) f.repeatWeekdays = [1,2,3,4,5,6,7];
     return normalizeTask(f);
