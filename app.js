@@ -1,5 +1,5 @@
 
-window.GO_BUILD_VERSION = "2026-05-30-R10";
+window.GO_BUILD_VERSION = "2026-05-30-R12";
 (function(){
   "use strict";
 
@@ -150,7 +150,7 @@ window.GO_BUILD_VERSION = "2026-05-30-R10";
     var now = new Date();
     el("weekdayText").textContent = now.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase();
     var homeList = orderedToday();
-    var editList = tasksToday();
+    var editList = S.tasks.slice();
     el("taskCount").textContent = homeList.length;
     el("editTaskCount").textContent = editList.length;
     renderTaskList(el("taskList"), homeList, false);
@@ -162,7 +162,7 @@ window.GO_BUILD_VERSION = "2026-05-30-R10";
     var now = new Date();
     el("weekdayText").textContent = now.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase();
     var homeList = orderedToday();
-    var editList = tasksToday();
+    var editList = S.tasks.slice();
     el("taskCount").textContent = homeList.length;
     el("editTaskCount").textContent = editList.length;
     renderTaskList(el("taskList"), homeList, false);
@@ -596,7 +596,7 @@ window.GO_BUILD_VERSION = "2026-05-30-R10";
   function bind(){
     el("addButton").onclick = function(){ openForm("new"); };
     el("editButton").onclick = function(){ S.editing = !S.editing; S.editAction = null; S.selectedTaskId = null; S.reorderTaskId = null; renderHome(); };
-    el("editDim").onclick = function(){ if(S.editAction){ S.editAction=null; S.selectedTaskId=null; } else S.editing=false; renderHome(); };
+    el("editDim").onclick = function(){ if(S.editAction || S.reorderTaskId){ S.editAction=null; S.selectedTaskId=null; S.reorderTaskId=null; } else S.editing=false; renderHome(); };
     el("duplicateModeButton").onclick = function(){ S.editAction = S.editAction === "duplicate" ? null : "duplicate"; S.selectedTaskId=null; S.reorderTaskId=null; renderHome(); };
     el("deleteModeButton").onclick = function(){ S.editAction = S.editAction === "delete" ? null : "delete"; S.selectedTaskId=null; S.reorderTaskId=null; renderHome(); };
 
